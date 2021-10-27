@@ -58,11 +58,52 @@ namespace RadiantPi.Telnet {
         public event EventHandler<TelnetMessageReceivedEventArgs>? MessageReceived;
 
         //--- Properties ---
-        public TelnetConnectionHandshakeAsync? ConfirmConnectionAsync { get; set; }
+        public TelnetConnectionHandshakeAsync? ValidateConnectionAsync { get; set; }
         private ILogger? Logger { get; }
         private StreamWriter StreamWriter => _streamWriter ?? throw new InvalidOperationException("Connection is not open");
 
         //--- Methods ---
+        public async Task<bool> ConnectAsync() {
+
+            // check if socket is already connected
+            if(_tcpClient?.Connected ?? false) {
+                return false;
+            }
+            Logger?.LogInformation($"Connecting telnet socket");
+
+            // cancel any previous listener
+            _internalCancellation?.Cancel();
+            _internalCancellation = new();
+
+            // initialize a new client
+            _tcpClient = new TcpClient();
+            await _tcpClient.ConnectAsync(_host, _port).ConfigureAwait(false);
+
+            // initialize reader/writer streams
+            _streamWriter = new(_tcpClient.GetStream()) {
+                AutoFlush = true
+            };
+
+            // notify that a connection is opening
+            StreamReader streamReader = new(_tcpClient.GetStream());
+            if(ValidateConnectionAsync != null) {
+                try {
+                    await ValidateConnectionAsync(this, streamReader, _streamWriter).ConfigureAwait(false);
+                } catch {
+                    Disconnect();
+                    throw;
+                }
+            }
+
+            // wait for messages to arrive
+            _ = WaitForMessages(
+                _tcpClient,
+                streamReader,
+                _internalCancellation
+            );
+            return true;
+        }
+
         public async Task SendAsync(string message) {
             if(_disposed) {
                 throw new ObjectDisposedException("TelnetClient");
@@ -113,42 +154,6 @@ namespace RadiantPi.Telnet {
 
                 // nothing to do
             }
-        }
-
-        public async Task<bool> ConnectAsync() {
-
-            // check if socket is already connected
-            if(_tcpClient?.Connected ?? false) {
-                return false;
-            }
-            Logger?.LogInformation($"Connecting telnet socket");
-
-            // cancel any previous listener
-            _internalCancellation?.Cancel();
-            _internalCancellation = new();
-
-            // initialize a new client
-            _tcpClient = new TcpClient();
-            await _tcpClient.ConnectAsync(_host, _port).ConfigureAwait(false);
-
-            // initialize reader/writer streams
-            _streamWriter = new(_tcpClient.GetStream()) {
-                AutoFlush = true
-            };
-
-            // notify that a connection is opening
-            StreamReader streamReader = new(_tcpClient.GetStream());
-            if(ConfirmConnectionAsync != null) {
-                await ConfirmConnectionAsync(this, streamReader, _streamWriter).ConfigureAwait(false);
-            }
-
-            // wait for messages to arrive
-            _ = WaitForMessages(
-                _tcpClient,
-                streamReader,
-                _internalCancellation
-            );
-            return true;
         }
 
         public void Dispose() => Dispose(true);

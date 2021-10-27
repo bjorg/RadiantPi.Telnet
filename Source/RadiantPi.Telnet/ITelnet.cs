@@ -39,7 +39,7 @@ namespace RadiantPi.Telnet {
         event EventHandler<TelnetMessageReceivedEventArgs>? MessageReceived;
 
         //--- Properties ---
-        TelnetConnectionHandshakeAsync? ConfirmConnectionAsync { get; set; }
+        TelnetConnectionHandshakeAsync? ValidateConnectionAsync { get; set; }
 
         //--- Methods ---
         Task<bool> ConnectAsync();
