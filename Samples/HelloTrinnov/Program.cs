@@ -17,10 +17,12 @@ client.ValidateConnectionAsync = async (client, reader, writer) => {
     await writer.WriteLineAsync("id radiant_pi_telnet");
 };
 
-client.MessageReceived += delegate(object? sender, TelnetMessageReceivedEventArgs args) {
+// hook-up event handler
+client.MessageReceived += delegate (object? sender, TelnetMessageReceivedEventArgs args) {
     Console.WriteLine($"Received: {args.Message}");
 };
 
+// connect to device
 Console.WriteLine("Open connection");
 await client.ConnectAsync();
 

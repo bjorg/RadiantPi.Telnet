@@ -14,10 +14,12 @@ client.ValidateConnectionAsync = async (client, reader, writer) => {
     await writer.WriteLineAsync($"01/1/ENABLE_EVENTS:#{playerSerialNumber}:");
 };
 
-client.MessageReceived += delegate(object? sender, TelnetMessageReceivedEventArgs args) {
+// hook-up event handler
+client.MessageReceived += delegate (object? sender, TelnetMessageReceivedEventArgs args) {
     Console.WriteLine($"Received: {args.Message}");
 };
 
+// connect to device
 Console.WriteLine("Open connection");
 await client.ConnectAsync();
 

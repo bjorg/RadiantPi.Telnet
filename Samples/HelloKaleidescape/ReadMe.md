@@ -21,7 +21,7 @@ client.ValidateConnectionAsync = async (client, reader, writer) => {
     await writer.WriteLineAsync($"01/1/ENABLE_EVENTS:#{playerSerialNumber}:");
 };
 
-client.MessageReceived += delegate(object? sender, TelnetMessageReceivedEventArgs args) {
+client.MessageReceived += delegate (object? sender, TelnetMessageReceivedEventArgs args) {
     Console.WriteLine($"Received: {args.Message}");
 };
 

@@ -24,7 +24,7 @@ client.ValidateConnectionAsync = async (client, reader, writer) => {
     await writer.WriteLineAsync("id radiant_pi_telnet");
 };
 
-client.MessageReceived += delegate(object? sender, TelnetMessageReceivedEventArgs args) {
+client.MessageReceived += delegate (object? sender, TelnetMessageReceivedEventArgs args) {
     Console.WriteLine($"Received: {args.Message}");
 };
 
