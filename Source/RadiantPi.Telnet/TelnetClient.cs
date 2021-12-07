@@ -69,7 +69,7 @@ namespace RadiantPi.Telnet {
             if(_tcpClient?.Connected ?? false) {
                 return false;
             }
-            Logger?.LogInformation($"Connecting telnet socket");
+            Logger?.LogInformation($"Connecting telnet socket [{_host}:{_port}]");
 
             // cancel any previous listener
             _internalCancellation?.Cancel();
@@ -116,7 +116,7 @@ namespace RadiantPi.Telnet {
             }
 
             // Send command + params
-            Logger?.LogTrace($"Sending: '{Escape(message)}'");
+            Logger?.LogTrace($"Sending [{_host}:{_port}]: '{Escape(message)}'");
             await StreamWriter.WriteLineAsync(message).ConfigureAwait(false);
         }
 
@@ -126,7 +126,7 @@ namespace RadiantPi.Telnet {
                 // nothing to do
                 return;
             }
-            Logger?.LogInformation($"Disconnecting telnet socket");
+            Logger?.LogInformation($"Disconnecting telnet socket [{_host}:{_port}]");
 
             // cancel socket read operations
             try {
@@ -190,7 +190,7 @@ namespace RadiantPi.Telnet {
 
                         // ignore empty messages
                         if(!string.IsNullOrWhiteSpace(message)) {
-                            Logger?.LogTrace($"Received: '{Escape(message)}'");
+                            Logger?.LogTrace($"Received [{_host}:{_port}]: '{Escape(message)}'");
                             MessageReceived?.Invoke(this, new TelnetMessageReceivedEventArgs(message));
                         }
                     } catch(ObjectDisposedException) {
