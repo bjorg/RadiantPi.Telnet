@@ -3,6 +3,7 @@
 Connect to a Trinnov Altitude.
 
 ## Code
+
 ```csharp
 using System;
 using System.IO;
