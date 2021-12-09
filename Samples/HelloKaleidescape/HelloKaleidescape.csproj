@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Spectre.Console" Version="0.43.0" />
     <ProjectReference Include="../../Source/RadiantPi.Telnet/RadiantPi.Telnet.csproj" />
   </ItemGroup>
 </Project>
