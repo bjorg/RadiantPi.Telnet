@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace RadiantPi.Telnet {
+    using Timer = System.Timers.Timer;
 
     public sealed class TelnetClient : ITelnet {
 
@@ -41,17 +42,21 @@ namespace RadiantPi.Telnet {
         //--- Fields ---
         private readonly int _port;
         private readonly string _host;
+        private readonly Timer _reconnectTimer;
         private CancellationTokenSource? _internalCancellation;
         private TcpClient? _tcpClient;
         private StreamWriter? _streamWriter;
         private bool _disposed = false;
-        private bool _sendReady;
 
         //--- Constructors ---
         public TelnetClient(string host, int port, ILogger<TelnetClient>? logger = null) {
             _host = host ?? throw new ArgumentNullException(nameof(host));
             _port = port;
             Logger = logger;
+
+            // initialize reconnection timer
+            _reconnectTimer = new(TimeSpan.FromSeconds(15).TotalMilliseconds);
+            _reconnectTimer.Elapsed += OnCheckConnectionTimer;
         }
 
         //--- Events ---
@@ -60,103 +65,55 @@ namespace RadiantPi.Telnet {
         //--- Properties ---
         public TelnetConnectionHandshakeAsync? ValidateConnectionAsync { get; set; }
         private ILogger? Logger { get; }
-        private StreamWriter StreamWriter => _streamWriter ?? throw new InvalidOperationException("Connection is not open");
+        private StreamWriter StreamWriter => _streamWriter ?? throw new InvalidOperationException("Connection is not connected");
 
         //--- Methods ---
-        public async Task<bool> ConnectAsync() {
-
-            // check if socket is already connected
-            if(_tcpClient?.Connected ?? false) {
-                return false;
-            }
-            Logger?.LogInformation($"Connecting telnet socket [{_host}:{_port}]");
-
-            // cancel any previous listener
-            _internalCancellation?.Cancel();
-            _internalCancellation = new();
-
-            // initialize a new client
-            _tcpClient = new TcpClient();
-            await _tcpClient.ConnectAsync(_host, _port).ConfigureAwait(false);
-
-            // initialize reader/writer streams
-            _streamWriter = new(_tcpClient.GetStream()) {
-                AutoFlush = true
-            };
-
-            // notify that a connection is opening
-            StreamReader streamReader = new(_tcpClient.GetStream());
-            if(ValidateConnectionAsync != null) {
-                try {
-                    await ValidateConnectionAsync(this, streamReader, _streamWriter).ConfigureAwait(false);
-                } catch {
-                    Disconnect();
-                    throw;
-                }
+        public async Task ConnectAsync() {
+            if(_disposed) {
+                throw new ObjectDisposedException(nameof(TelnetClient));
             }
 
-            // wait for messages to arrive
-            _ = WaitForMessages(
-                _tcpClient,
-                streamReader,
-                _internalCancellation
-            );
-            return true;
+            // attempt to connect
+            Logger?.LogInformation($"Connecting to telnet socket [{_host}:{_port}]");
+            await ReconnectAsync().ConfigureAwait(false);
+
+            // enable reconneciton timer
+            _reconnectTimer.Enabled = true;
         }
 
         public async Task SendAsync(string message) {
             if(_disposed) {
-                throw new ObjectDisposedException("TelnetClient");
+                throw new ObjectDisposedException(nameof(TelnetClient));
             }
 
-            // open connection
-            await ConnectAsync().ConfigureAwait(false);
-            if(!_sendReady) {
-                throw new InvalidOperationException("Client is not ready to send messages");
+            // ensure the client is connected
+            if(!(_tcpClient?.Connected ?? false)) {
+                throw new InvalidOperationException("Client is not connected");
             }
 
-            // Send command + params
+            // Send command
             Logger?.LogTrace($"Sending [{_host}:{_port}]: '{Escape(message)}'");
             await StreamWriter.WriteLineAsync(message).ConfigureAwait(false);
         }
 
         public void Disconnect() {
-            if(_tcpClient == null) {
-
-                // nothing to do
-                return;
+            if(_disposed) {
+                throw new ObjectDisposedException(nameof(TelnetClient));
             }
             Logger?.LogInformation($"Disconnecting telnet socket [{_host}:{_port}]");
-
-            // cancel socket read operations
-            try {
-                _internalCancellation?.Cancel();
-                _internalCancellation = null;
-            } catch {
-
-                // nothing to do
-            }
-
-            // close write stream
-            try {
-                _streamWriter?.Close();
-                _streamWriter = null;
-            } catch {
-
-                // nothing to do
-            }
-
-            // close socket
-            try {
-                _tcpClient?.Close();
-                _tcpClient = null;
-            } catch {
-
-                // nothing to do
-            }
+            ResetConnectionState();
         }
 
-        public void Dispose() => Dispose(true);
+        public void Dispose() {
+
+            // NOTE (2022-02-01, bjorg): the `Dispose()` method must be idempotent
+            if(_disposed) {
+                return;
+            }
+
+            // dispose object indicating `Dispose()` was called explicitly
+            Dispose(disposing: true);
+        }
 
         private async Task WaitForMessages(
             TcpClient tcpClient,
@@ -164,7 +121,6 @@ namespace RadiantPi.Telnet {
             CancellationTokenSource cancellationToken
         ) {
             try {
-                _sendReady = true;
                 while(true) {
 
                     // check if cancelation token is set
@@ -208,19 +164,120 @@ namespace RadiantPi.Telnet {
                     }
                 }
             } finally {
-                _sendReady = false;
                 streamReader.Close();
             }
         }
 
         private void Dispose(bool disposing) {
+
+            // has this instance been disposed before
             if(_disposed) {
                 return;
             }
+            _disposed = true;
+
+            // close connection and release resources
             if(disposing) {
                 Disconnect();
+                _reconnectTimer.Dispose();
             }
-            _disposed = true;
         }
-    }
+
+        private void OnCheckConnectionTimer(object? source, System.Timers.ElapsedEventArgs args) {
+
+            // check timer to minimize race condition between a reconnection attempt and an intentional disconnection
+            if(!_reconnectTimer.Enabled) {
+                return;
+            }
+
+            // attempt to connect again
+            try {
+                ReconnectAsync().GetAwaiter().GetResult();
+            } catch(Exception e) {
+                Logger?.LogWarning(e, "Reconnect attempt failed");
+            }
+        }
+
+        private async Task ReconnectAsync() {
+
+            // check if TCP client is already connected
+            if(_tcpClient?.Connected ?? false) {
+                return;
+            }
+
+            // reset all connection resources
+            ResetConnectionState();
+
+            // initialize a new TCP client
+            TcpClient tcpClient;
+            try {
+                tcpClient = new();
+                await tcpClient.ConnectAsync(_host, _port).ConfigureAwait(false);
+            } catch(SocketException) {
+
+                // unable to connect to telnet server
+                return;
+            } catch(Exception e) {
+                Logger?.LogError(e, "Unable to connect");
+                return;
+            }
+            _tcpClient = tcpClient;
+
+            // initialize reader/writer streams
+            StreamReader streamReader = new(_tcpClient.GetStream());
+            _streamWriter = new(_tcpClient.GetStream()) {
+                AutoFlush = true
+            };
+
+            // validate new connection
+            if(ValidateConnectionAsync != null) {
+                try {
+                    await ValidateConnectionAsync(this, streamReader, _streamWriter).ConfigureAwait(false);
+                } catch(Exception e) {
+                    Logger?.LogError(e, "Unable to validate connection");
+                    ResetConnectionState();
+                    throw;
+                }
+            }
+
+            // wait for messages to arrive
+            _internalCancellation = new();
+            _ = WaitForMessages(
+                _tcpClient,
+                streamReader,
+                _internalCancellation
+            );
+        }
+
+        private void ResetConnectionState() {
+
+            // disable timer to prevent reconnections from happening
+            _reconnectTimer.Enabled = false;
+
+            // cancel socket read operations
+            try {
+                _internalCancellation?.Cancel();
+                _internalCancellation = null;
+            } catch(Exception e) {
+                Logger?.LogWarning(e, "Error while resetting cancellation token");
+            }
+
+            // close write stream
+            try {
+                _streamWriter?.Close();
+                _streamWriter = null;
+            } catch(Exception e) {
+                Logger?.LogWarning(e, "Error while closing write stream");
+            }
+
+            // close TCP client
+            try {
+                _tcpClient?.Close();
+                _tcpClient?.Dispose();
+                _tcpClient = null;
+            } catch(Exception e) {
+                Logger?.LogWarning(e, "Error while disposing TCP client");
+            }
+        }
+   }
 }

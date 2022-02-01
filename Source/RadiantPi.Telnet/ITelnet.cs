@@ -42,7 +42,7 @@ namespace RadiantPi.Telnet {
         TelnetConnectionHandshakeAsync? ValidateConnectionAsync { get; set; }
 
         //--- Methods ---
-        Task<bool> ConnectAsync();
+        Task ConnectAsync();
         Task SendAsync(string message);
         void Disconnect();
     }
