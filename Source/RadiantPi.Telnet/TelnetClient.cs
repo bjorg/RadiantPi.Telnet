@@ -147,7 +147,7 @@ namespace RadiantPi.Telnet {
                         // ignore empty messages
                         if(!string.IsNullOrWhiteSpace(message)) {
                             Logger?.LogTrace($"Received [{_host}:{_port}]: '{Escape(message)}'");
-                            MessageReceived?.Invoke(this, new TelnetMessageReceivedEventArgs(message));
+                            MessageReceived?.Invoke(this, new(message));
                         }
                     } catch(ObjectDisposedException) {
 

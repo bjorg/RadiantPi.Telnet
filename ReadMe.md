@@ -18,7 +18,7 @@ using System;
 using RadiantPi.Telnet;
 
 // initialize client
-using var client = new TelnetClient("192.168.1.180", 44100);
+using TelnetClient client = new("192.168.1.180", 44100);
 
 // register server connection validation
 client.ValidateConnectionAsync = async (client, reader, writer) => {

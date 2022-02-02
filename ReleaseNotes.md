@@ -1,5 +1,6 @@
 # Release Notes
 
+
 # v2.0 (TBD)
 
 ### BREAKING CHANGES
@@ -9,7 +10,7 @@
 
 ### Features
 
-* Attempt to automatically reconnect client every 15s.
+* Added auto-reconnect capability. Eveny 15s the client tries to reconnect when the connection was lost. Send operations during that time will fail with an exception.
 
 
 ## v1.1 (2021-12-07)

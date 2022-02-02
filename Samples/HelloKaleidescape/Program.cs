@@ -27,7 +27,7 @@ if(string.IsNullOrEmpty(deviceId)) {
 }
 
 // initialize client
-using var client = new TelnetClient("192.168.1.147", 10000);
+using TelnetClient client = new("192.168.1.147", 10000);
 
 // register server connection validation
 client.ValidateConnectionAsync = async (client, reader, writer) => {
