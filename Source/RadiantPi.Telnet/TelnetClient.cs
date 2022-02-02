@@ -16,12 +16,8 @@
  * with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-using System;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace RadiantPi.Telnet {
