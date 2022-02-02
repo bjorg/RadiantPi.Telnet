@@ -18,30 +18,29 @@
 
 using System.IO;
 
-namespace RadiantPi.Telnet {
+namespace RadiantPi.Telnet;
 
-    public sealed class TelnetMessageReceivedEventArgs : EventArgs {
+public sealed class TelnetMessageReceivedEventArgs : EventArgs {
 
-        //--- Constructors ---
-        public TelnetMessageReceivedEventArgs(string message) => Message = message ?? throw new ArgumentNullException(nameof(message));
+    //--- Constructors ---
+    public TelnetMessageReceivedEventArgs(string message) => Message = message ?? throw new ArgumentNullException(nameof(message));
 
-        //--- Properties ---
-        public string Message { get; }
-    }
+    //--- Properties ---
+    public string Message { get; }
+}
 
-    public delegate Task TelnetConnectionHandshakeAsync(ITelnet client, TextReader reader, TextWriter writer);
+public delegate Task TelnetConnectionHandshakeAsync(ITelnet client, TextReader reader, TextWriter writer);
 
-    public interface ITelnet : IDisposable {
+public interface ITelnet : IDisposable {
 
-        //--- Events ---
-        event EventHandler<TelnetMessageReceivedEventArgs>? MessageReceived;
+    //--- Events ---
+    event EventHandler<TelnetMessageReceivedEventArgs>? MessageReceived;
 
-        //--- Properties ---
-        TelnetConnectionHandshakeAsync? ValidateConnectionAsync { get; set; }
+    //--- Properties ---
+    TelnetConnectionHandshakeAsync? ValidateConnectionAsync { get; set; }
 
-        //--- Methods ---
-        Task ConnectAsync();
-        Task SendAsync(string message);
-        void Disconnect();
-    }
+    //--- Methods ---
+    Task ConnectAsync();
+    Task SendAsync(string message);
+    void Disconnect();
 }
