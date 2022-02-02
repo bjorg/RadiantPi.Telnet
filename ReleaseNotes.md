@@ -4,7 +4,7 @@
 
 ### BREAKING CHANGES
 
-* Changed target framework to .NET 6.
+* Changed target framework to .NET 6.0.
 * Changed `ITelnet.ConnectAsync()` to not return a boolean.
 
 ### Features

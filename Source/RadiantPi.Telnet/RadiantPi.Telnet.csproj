@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>RadiantPi.Telnet</RootNamespace>
     <NoWarn>CS1998</NoWarn>
     <Deterministic>true</Deterministic>
