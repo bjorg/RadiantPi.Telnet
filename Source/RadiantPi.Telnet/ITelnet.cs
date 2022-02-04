@@ -16,9 +16,9 @@
  * with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-using System.IO;
-
 namespace RadiantPi.Telnet;
+
+using System.IO;
 
 public sealed class TelnetMessageReceivedEventArgs : EventArgs {
 

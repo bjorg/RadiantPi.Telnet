@@ -16,11 +16,12 @@
  * with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+namespace RadiantPi.Telnet;
+
 using System.IO;
 using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
 
-namespace RadiantPi.Telnet;
 using Timer = System.Timers.Timer;
 
 public sealed class TelnetClient : ITelnet {
