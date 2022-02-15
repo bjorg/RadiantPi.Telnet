@@ -1,7 +1,13 @@
 # Release Notes
 
 
-# v2.0 (TBD)
+# v2.0.1 (2022-02-15)
+
+## Fixes
+
+* Fixed an issue where reconnecting on lost network connection would not work as expected.
+
+# v2.0 (2022-02-15)
 
 ### BREAKING CHANGES
 
@@ -10,7 +16,7 @@
 
 ### Features
 
-* Added auto-reconnect capability. Eveny 15s the client tries to reconnect when the connection was lost. Send operations during that time will fail with an exception.
+* Added auto-reconnect capability. Every 15s the client tries to reconnect when the connection was lost. Send operations during that time will fail with an exception.
 
 
 ## v1.1 (2021-12-07)
