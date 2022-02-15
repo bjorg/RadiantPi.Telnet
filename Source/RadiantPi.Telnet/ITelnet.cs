@@ -1,6 +1,6 @@
 /*
  * RadiantPi.Telnet - Client for Telnet protocol
- * Copyright (C) 2020-2021 - Steve G. Bjorg
+ * Copyright (C) 2020-2022 - Steve G. Bjorg
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by the
@@ -16,34 +16,31 @@
  * with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-using System;
+namespace RadiantPi.Telnet;
+
 using System.IO;
-using System.Threading.Tasks;
 
-namespace RadiantPi.Telnet {
+public sealed class TelnetMessageReceivedEventArgs : EventArgs {
 
-    public sealed class TelnetMessageReceivedEventArgs : EventArgs {
+    //--- Constructors ---
+    public TelnetMessageReceivedEventArgs(string message) => Message = message ?? throw new ArgumentNullException(nameof(message));
 
-        //--- Constructors ---
-        public TelnetMessageReceivedEventArgs(string message) => Message = message ?? throw new ArgumentNullException(nameof(message));
+    //--- Properties ---
+    public string Message { get; }
+}
 
-        //--- Properties ---
-        public string Message { get; }
-    }
+public delegate Task TelnetConnectionHandshakeAsync(ITelnet client, TextReader reader, TextWriter writer);
 
-    public delegate Task TelnetConnectionHandshakeAsync(ITelnet client, TextReader reader, TextWriter writer);
+public interface ITelnet : IDisposable {
 
-    public interface ITelnet : IDisposable {
+    //--- Events ---
+    event EventHandler<TelnetMessageReceivedEventArgs>? MessageReceived;
 
-        //--- Events ---
-        event EventHandler<TelnetMessageReceivedEventArgs>? MessageReceived;
+    //--- Properties ---
+    TelnetConnectionHandshakeAsync? ValidateConnectionAsync { get; set; }
 
-        //--- Properties ---
-        TelnetConnectionHandshakeAsync? ValidateConnectionAsync { get; set; }
-
-        //--- Methods ---
-        Task<bool> ConnectAsync();
-        Task SendAsync(string message);
-        void Disconnect();
-    }
+    //--- Methods ---
+    Task ConnectAsync();
+    Task SendAsync(string message);
+    void Disconnect();
 }
