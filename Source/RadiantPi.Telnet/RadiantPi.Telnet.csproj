@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
 
     <PackageId>RadiantPi.Telnet</PackageId>
-    <Version>2.0</Version>
+    <Version>2.0.1</Version>
     <Title>RadiantPi Telnet Client Library</Title>
     <Description>Communication client for Telnet</Description>
     <Copyright>Copyright (C) 2020-2022</Copyright>

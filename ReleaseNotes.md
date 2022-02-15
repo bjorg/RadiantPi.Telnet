@@ -6,6 +6,7 @@
 ## Fixes
 
 * Fixed an issue where reconnecting on lost network connection would not work as expected.
+* Always show host IP and port in log messages.
 
 # v2.0 (2022-02-15)
 
