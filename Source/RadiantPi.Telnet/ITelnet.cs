@@ -38,6 +38,7 @@ public interface ITelnet : IDisposable {
 
     //--- Properties ---
     TelnetConnectionHandshakeAsync? ValidateConnectionAsync { get; set; }
+    bool Connected { get; }
 
     //--- Methods ---
     Task ConnectAsync();
