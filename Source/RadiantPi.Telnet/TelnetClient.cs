@@ -167,7 +167,9 @@ public sealed class TelnetClient : ITelnet {
         } finally {
 
             // close read stream
-            streamReader.Close();
+            try {
+                streamReader.Close();
+            } catch { }
 
             // close TCP client
             try {
