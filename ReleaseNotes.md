@@ -10,6 +10,7 @@
 ## Fixes
 
 * Added mutex to avoid a race-condition between sending a command and sending a heartbeat.
+* Close TCP client when `WaitForMessages()` exits.
 
 
 # v2.0.1 (2022-02-15)

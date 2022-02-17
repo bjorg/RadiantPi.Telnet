@@ -165,7 +165,14 @@ public sealed class TelnetClient : ITelnet {
                 }
             }
         } finally {
+
+            // close read stream
             streamReader.Close();
+
+            // close TCP client
+            try {
+                tcpClient?.Close();
+            } catch { }
         }
     }
 
