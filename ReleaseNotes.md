@@ -1,13 +1,20 @@
 # Release Notes
 
-## v2.1.1 (2022-02-15)
+## v2.2 (2022-02-16)
+
+### Features
+
+* Added `AutoReconnect` property to control if Telnet client is using a hearbeat to automatically reconnect to the server.
+
+
+## v2.1.1 (2022-02-16)
 
 ### Fixes
 
 * Declare `Connected` on `ITelnet` interface.
 
 
-## v2.1 (2022-02-15)
+## v2.1 (2022-02-16)
 
 ### Features
 
