@@ -41,6 +41,7 @@ public sealed class TelnetClient : ITelnet {
     private readonly int _port;
     private readonly string _host;
     private readonly Timer _reconnectTimer;
+    private readonly SemaphoreSlim _mutex = new SemaphoreSlim(1, 1);
     private CancellationTokenSource? _internalCancellation;
     private TcpClient? _tcpClient;
     private StreamWriter? _streamWriter;
@@ -62,6 +63,7 @@ public sealed class TelnetClient : ITelnet {
 
     //--- Properties ---
     public TelnetConnectionHandshakeAsync? ValidateConnectionAsync { get; set; }
+    public bool Connected => _tcpClient?.Connected ?? false;
     private ILogger? Logger { get; }
     private StreamWriter StreamWriter => _streamWriter ?? throw new InvalidOperationException("Connection is not connected");
 
@@ -81,13 +83,18 @@ public sealed class TelnetClient : ITelnet {
         }
 
         // ensure the client is connected
-        if(!(_tcpClient?.Connected ?? false)) {
+        if(!Connected) {
             throw new InvalidOperationException("Client is not connected");
         }
 
         // Send command
-        Logger?.LogTrace($"Sending [{_host}:{_port}]: '{Escape(message)}'");
-        await StreamWriter.WriteLineAsync(message).ConfigureAwait(false);
+        await _mutex.WaitAsync().ConfigureAwait(false);
+        try {
+            Logger?.LogTrace($"Sending [{_host}:{_port}]: '{Escape(message)}'");
+            await StreamWriter.WriteLineAsync(message).ConfigureAwait(false);
+        } finally {
+            _mutex.Release();
+        }
     }
 
     public void Disconnect() {
@@ -191,9 +198,14 @@ public sealed class TelnetClient : ITelnet {
             try {
 
                 // send heartbeat to telnet server
-                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-                await streamWriter.WriteLineAsync(new char[0], cts.Token).ConfigureAwait(false);
-                connected = true;
+                await _mutex.WaitAsync().ConfigureAwait(false);
+                try {
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+                    await streamWriter.WriteLineAsync(new char[0], cts.Token).ConfigureAwait(false);
+                    connected = true;
+                } finally {
+                    _mutex.Release();
+                }
                 Logger?.LogTrace($"HeartBeat [{_host}:{_port}]: SUCCESS");
             } catch(TaskCanceledException) {
 
