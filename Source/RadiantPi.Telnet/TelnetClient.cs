@@ -64,6 +64,7 @@ public sealed class TelnetClient : ITelnet {
     //--- Properties ---
     public TelnetConnectionHandshakeAsync? ValidateConnectionAsync { get; set; }
     public bool Connected => _tcpClient?.Connected ?? false;
+    public bool AutoReconnect { get; set; } = true;
     private ILogger? Logger { get; }
     private StreamWriter StreamWriter => _streamWriter ?? throw new InvalidOperationException("Connection is not connected");
 
@@ -249,7 +250,7 @@ public sealed class TelnetClient : ITelnet {
         ResetConnectionState();
 
         // enable reconnection timer
-        _reconnectTimer.Enabled = true;
+        _reconnectTimer.Enabled = AutoReconnect;
 
         // initialize a new TCP client
         TcpClient tcpClient;
