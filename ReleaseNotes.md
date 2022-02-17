@@ -2,7 +2,7 @@
 
 ## v2.1.1 (2022-02-15)
 
-## Fixes
+### Fixes
 
 * Declare `Connected` on `ITelnet` interface.
 
