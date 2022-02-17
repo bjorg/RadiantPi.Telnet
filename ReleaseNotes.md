@@ -1,5 +1,17 @@
 # Release Notes
 
+# v2.1 (2022-02-15)
+
+## Features
+
+* Added `Connected` property to check if the Telnet client is currently connected.
+* Upgraded `Microsoft.Extensions.Logging` package to 6.0.0
+
+## Fixes
+
+* Added mutex to avoid a race-condition between sending a command and sending a heartbeat.
+* Close TCP client when `WaitForMessages()` exits.
+
 
 # v2.0.1 (2022-02-15)
 

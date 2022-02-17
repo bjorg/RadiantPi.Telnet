@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
 
     <PackageId>RadiantPi.Telnet</PackageId>
-    <Version>2.0.1</Version>
+    <Version>2.1</Version>
     <Title>RadiantPi Telnet Client Library</Title>
     <Description>Communication client for Telnet</Description>
     <Copyright>Copyright (C) 2020-2022</Copyright>
@@ -25,7 +25,7 @@
     <Using Include="System.Threading.Tasks" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\ReadMe.md" Pack="true" PackagePath="\" />
