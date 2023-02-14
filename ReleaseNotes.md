@@ -1,5 +1,10 @@
 # Release Notes
 
+## v2.3 (TBD)
+
+> TODO
+
+
 ## v2.2 (2022-02-16)
 
 ### Features

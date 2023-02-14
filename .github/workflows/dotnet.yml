@@ -18,10 +18,12 @@ jobs:
           dotnet-version: 6.0.x
 
       # Build RadiantPi.Telnet
-      - name: Restore dependencies
+      - name: Restore
         run: dotnet restore Source/RadiantPi.Telnet/RadiantPi.Telnet.csproj
       - name: Build
-        run: dotnet build --no-restore Source/RadiantPi.Telnet/RadiantPi.Telnet.csproj
+        run: dotnet build --no-restore --configuration Release Source/RadiantPi.Telnet/RadiantPi.Telnet.csproj
+      - name: Pack
+        run: dotnet pack --no-build --configuration Release --include-symbols -p:SymbolPackageFormat=snupkg -o . Source/RadiantPi.Telnet/RadiantPi.Telnet.csproj
 
       # Build Samples
       - name: Build HelloTrinnov Sample
@@ -32,7 +34,4 @@ jobs:
       # Publish RadiantPi.Telnet
       - name: Publish
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: brandedoutcast/publish-nuget@v2.5.5
-        with:
-            PROJECT_FILE_PATH: Source/RadiantPi.Telnet/RadiantPi.Telnet.csproj
-            NUGET_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: dotnet nuget push *.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source "https://api.nuget.org/v3/index.json" --skip-duplicate
